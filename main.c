@@ -7,8 +7,6 @@
 #include "mu/str.h"
 #include "mu/tbl.h"
 #include "mu/fn.h"
-#include "mu/parse.h"
-#include "mu/vm.h"
 #include "mu/sys.h"
 
 #include <string.h>
@@ -68,18 +66,9 @@ mu_t sys_import(mu_t name) {
 
 
 // Operations
-static mu_t execute_result(const char *input) {
-    mu_t frame[MU_FRAME];
-    mu_t s = mstr("%s", input);
-    struct code *c = mu_compile(s);
-    mc_t rets = mu_exec(c, mu_inc(scope), frame);
-    mu_fconvert(0xf, rets, frame);
-    return frame[0];
-}
-
 static void execute(const char *input) {
     if (!setjmp(error_jmp)) {
-        mu_dec(execute_result(input));
+        mu_eval(input, strlen(input), scope, 0);
     }
 }
 
@@ -102,8 +91,7 @@ static void load_file(FILE *file) {
             mu_errorf("io error reading file (%d)", errno);
         }
 
-        buf_push(&buffer, &n, '\0');
-        execute(buf_data(buffer));
+        mu_eval(buf_data(buffer), n, scope, 0);
         buf_dec(buffer);
     }
 }
@@ -131,9 +119,9 @@ static int interpret() {
         add_history(input);
 
         if (!setjmp(error_jmp)) {
-            mu_t res = execute_result(input);
+            mu_t res = mu_eval(input, strlen(input), scope, 0xf);
             mu_t repr = mu_dump(res, muint(2));
-            printf("%.*s\n", str_len(repr)-2, str_bytes(repr)+1);
+            printf("%.*s\n", str_len(repr)-2, str_data(repr)+1);
             mu_dec(repr);
         }
 
