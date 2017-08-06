@@ -7,6 +7,7 @@ SIZE = size
 
 SRC += $(wildcard *.c)
 SRC += $(wildcard mu/*.c)
+SRC += $(wildcard linenoise/*.c)
 OBJ := $(SRC:.c=.o)
 DEP := $(SRC:.c=.d)
 ASM := $(SRC:.c=.s)
@@ -25,7 +26,6 @@ CFLAGS += -std=c99 -pedantic
 CFLAGS += -Wall -Winline
 
 LFLAGS += -lm
-LFLAGS += -lreadline
 
 
 all: $(TARGET)

@@ -16,10 +16,10 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <readline/readline.h>
-#include <readline/history.h>
+#include "linenoise/linenoise.h"
 
 #define BLOCK_SIZE 512
+#define HISTORY_LEN 256
 
 
 // Global state 
@@ -138,13 +138,15 @@ static void load(const char *name) {
 }
 
 static int interpret() {
+    linenoiseHistorySetMaxLen(HISTORY_LEN);
+
     while (true) {
-        char *input = readline("\001\x1b[32m\002> \001\x1b[0m\002");
+        char *input = linenoise("> ");
         if (!input) {
             return 0;
         }
 
-        add_history(input);
+        linenoiseHistoryAdd(input);
 
         if (!setjmp(error_jmp)) {
             mu_t res = mu_eval(input, strlen(input), scope, 0xf);
